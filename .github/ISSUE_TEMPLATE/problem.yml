@@ -1,0 +1,82 @@
+name: 📌 알고리즘 문제 등록
+description: 이번 주차에 함께 풀 문제를 등록합니다. 등록하면 풀이 폴더와 제출 체크리스트가 자동으로 생성됩니다.
+title: '[문제] '
+labels: [problem]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        문제 링크만 있으면 나머지는 워크플로가 처리합니다.
+        등록 후 잘못된 값이 있으면 **이슈 본문을 수정**하세요. 자동으로 다시 검사합니다.
+
+  - type: input
+    id: week
+    attributes:
+      label: 주차
+      description: 숫자만 입력하세요. 예) 1 → week-01
+      placeholder: '1'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 플랫폼
+      options:
+        - SWEA
+        - 프로그래머스
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: 문제 링크
+      placeholder: https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=...
+    validations:
+      required: true
+
+  - type: input
+    id: number
+    attributes:
+      label: 문제 번호
+      description: |
+        SWEA는 링크에 번호가 없으니 직접 입력해 주세요. (예: 1859)
+        프로그래머스는 비워 두면 링크에서 자동으로 추출합니다.
+      placeholder: '1859'
+    validations:
+      required: false
+
+  - type: input
+    id: title
+    attributes:
+      label: 문제 제목
+      placeholder: 백만 장자 프로젝트
+    validations:
+      required: true
+
+  - type: input
+    id: difficulty
+    attributes:
+      label: 난이도
+      description: 자유 형식. 예) D2, Lv.2
+      placeholder: D2
+    validations:
+      required: false
+
+  - type: input
+    id: deadline
+    attributes:
+      label: 마감일
+      description: YYYY-MM-DD
+      placeholder: '2026-08-10'
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 메모
+      description: 힌트, 주의할 점, 관련 알고리즘 등 자유롭게 적어 주세요.
+    validations:
+      required: false

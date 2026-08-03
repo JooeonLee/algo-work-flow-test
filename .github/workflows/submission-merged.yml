@@ -1,0 +1,42 @@
+name: 제출 현황 갱신
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: submission-merged
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: 이슈 체크리스트 갱신
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const mod = await import(`file://${process.env.GITHUB_WORKSPACE}/.github/scripts/on-merged.mjs`);
+            await mod.run({ github, context, core });
+
+      - name: 현황판 갱신
+        env:
+          BRANCH: ${{ github.event.repository.default_branch }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/build-leaderboard.mjs
+          bash .github/scripts/commit-and-push.sh \
+            "$BRANCH" \
+            "docs: 스터디 현황판 갱신 (#${PR})" \
+            README.md

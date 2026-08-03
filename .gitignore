@@ -1,0 +1,11 @@
+*.class
+build/
+out/
+bin/
+compile.log
+check-state.json
+
+.idea/
+*.iml
+.vscode/
+.DS_Store

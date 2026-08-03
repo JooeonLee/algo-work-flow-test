@@ -1,0 +1,77 @@
+name: 풀이 제출 검사
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: submission-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 제출 경로 규칙 검사
+        id: rules
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const mod = await import(`file://${process.env.GITHUB_WORKSPACE}/.github/scripts/check-submission.mjs`);
+            await mod.run({ github, context, core });
+
+      - uses: actions/setup-java@v4
+        if: steps.rules.outputs.java_count != '0'
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 컴파일 검사
+        id: compile
+        if: steps.rules.outputs.java_count != '0'
+        continue-on-error: true
+        env:
+          DIRS: ${{ steps.rules.outputs.dirs }}
+        run: |
+          set +e
+          set -uo pipefail
+          status=0
+          : > compile.log
+          # SWEA/프로그래머스 Java 풀이는 보통 클래스명이 Solution이라 서로 충돌한다.
+          # 제출자 폴더 단위로 따로 컴파일해서 이를 피한다.
+          for dir in $DIRS; do
+            mapfile -t files < <(find "$dir" -name '*.java')
+            if [ ${#files[@]} -eq 0 ]; then
+              continue
+            fi
+            out="build/$(echo "$dir" | tr '/' '_')"
+            mkdir -p "$out"
+            echo "==> javac $dir" >> compile.log
+            if ! javac -encoding UTF-8 -d "$out" "${files[@]}" >>compile.log 2>&1; then
+              status=1
+            fi
+          done
+          cat compile.log
+          exit $status
+
+      - name: 결과 댓글
+        if: always() && steps.rules.outcome == 'success'
+        uses: actions/github-script@v7
+        env:
+          COMPILE_RESULT: ${{ steps.rules.outputs.java_count == '0' && 'success' || steps.compile.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            process.env.COMPILE_LOG = fs.existsSync('compile.log')
+              ? fs.readFileSync('compile.log', 'utf8')
+              : '';
+            const mod = await import(`file://${process.env.GITHUB_WORKSPACE}/.github/scripts/check-submission.mjs`);
+            await mod.report({ github, context, core });

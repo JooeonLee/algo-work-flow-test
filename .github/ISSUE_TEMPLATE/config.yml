@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 스터디 잡담 / 질문
+    url: https://github.com/JooeonLee/algo-work-flow-test/discussions
+    about: 문제 등록이 아닌 일반적인 논의는 여기에서 해주세요.
