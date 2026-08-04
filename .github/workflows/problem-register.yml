@@ -2,7 +2,11 @@ name: 문제 등록
 
 on:
   issues:
-    types: [opened, edited, labeled, reopened]
+    # labeled는 넣지 않는다. 라벨이 붙은 채로 이슈가 만들어지면 GitHub이
+    # opened와 labeled를 모두 발생시켜 같은 워크플로가 두 번 돈다.
+    # 이슈 폼으로 만든 이슈는 opened만으로 잡히고, 뒤늦게 라벨을 붙여
+    # 등록하려는 경우에는 본문을 한 번 수정하면 edited로 실행된다.
+    types: [opened, edited, reopened]
 
 permissions:
   contents: write
