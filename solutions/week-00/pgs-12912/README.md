@@ -1,0 +1,22 @@
+# 프로그래머스 12912 · 두 정수 사이의 합
+
+- 문제 링크: https://school.programmers.co.kr/learn/courses/30/lessons/12912
+- 주차: week-00
+- 난이도: Lv.1
+- 논의 이슈: #18 (상위 이슈: #16)
+
+## 제출 방법
+
+```bash
+git switch -c solve/week-00-pgs-12912-$(git config user.name)
+mkdir -p solutions/week-00/pgs-12912/<본인-github-아이디>
+# solutions/week-00/pgs-12912/<본인-github-아이디>/Solution.java 에 풀이 작성
+```
+
+- 폴더 이름은 **본인 GitHub 아이디**와 정확히 같아야 합니다.
+- 파일은 `.java`만 올립니다. 클래스명 충돌을 막기 위해 사람마다 폴더를 분리합니다.
+- 다른 사람 폴더는 건드리지 않습니다. (PR 검사에서 막힙니다)
+
+## 제출 현황
+
+- [ ] @JooeonLee
