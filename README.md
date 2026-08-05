@@ -95,7 +95,9 @@ solutions/
 
 ### 🏆 제출 순위
 
-_아직 제출된 풀이가 없습니다._
+| 순위 | 스터디원 | 푼 문제 | 진행률 |
+| --- | --- | --- | --- |
+| 🥇 | [@JooeonLee](https://github.com/JooeonLee) | 1 / 2 | 50% |
 
 ### 📚 주차별 문제
 
@@ -105,7 +107,7 @@ _아직 제출된 풀이가 없습니다._
 | 문제 | 이슈 | 제출 | 제출자 |
 | --- | --- | --- | --- |
 | [프로그래머스 12912 · 두 정수 사이의 합](https://school.programmers.co.kr/learn/courses/30/lessons/12912) | #18 | 0 | - |
-| [프로그래머스 12937 · 짝수와 홀수](https://school.programmers.co.kr/learn/courses/30/lessons/12937) | #17 | 0 | - |
+| [프로그래머스 12937 · 짝수와 홀수](https://school.programmers.co.kr/learn/courses/30/lessons/12937) | #17 | 1 | [@JooeonLee](https://github.com/JooeonLee) |
 
 </details>
 
