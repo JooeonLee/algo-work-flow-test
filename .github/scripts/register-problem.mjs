@@ -46,9 +46,10 @@ export async function run({ github, context, core }) {
   const fields = parseIssueForm(parentIssue.body || '');
   const errors = [];
 
-  const week = Number((fields['주차'] || '').replace(/[^0-9]/g, ''));
-  const weekValid = week >= 1 && week <= 99;
-  if (!weekValid) errors.push('`주차`는 1~99 사이 숫자여야 합니다.');
+  const weekRaw = (fields['주차'] || '').trim();
+  const weekValid = /^\d+$/.test(weekRaw) && Number(weekRaw) <= 99;
+  const week = weekValid ? Number(weekRaw) : NaN;
+  if (!weekValid) errors.push('`주차`는 0~99 사이 숫자여야 합니다. (0은 온보딩/오리엔테이션 주차로 씁니다)');
 
   const lines = (fields['문제 목록'] || '')
     .split('\n')

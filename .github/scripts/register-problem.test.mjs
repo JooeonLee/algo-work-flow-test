@@ -35,6 +35,24 @@ function readMeta(dir) {
   return JSON.parse(fs.readFileSync(path.join(workspace, dir, '.problem.json'), 'utf8'));
 }
 
+test('주차 0(온보딩)도 유효하다', async () => {
+  const { data: parent } = await github.rest.issues.create({ title: '[문제] week-00' });
+  const b = body(0, 'https://school.programmers.co.kr/learn/courses/30/lessons/111 | A | | |');
+  const core = makeCore();
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, b), core });
+  assert.equal(core._outputs.__failed, undefined);
+  assert.equal(fs.existsSync(path.join(workspace, 'solutions/week-00/pgs-111')), true);
+});
+
+test('주차를 비워두면(빈 문자열이 0으로 잘못 파싱되지 않고) 여전히 실패한다', async () => {
+  const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
+  const b = body('', 'https://school.programmers.co.kr/learn/courses/30/lessons/111 | A | | |');
+  const core = makeCore();
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, b), core });
+  assert.ok(core._outputs.__failed);
+  assert.match(core._outputs.__failed, /주차/);
+});
+
 test('문제 2개를 등록하면 자식 이슈 2개가 생기고 부모에 sub-issue로 연결된다', async () => {
   const { data: parent } = await github.rest.issues.create({ title: '[문제] week-01' });
   const b = body(

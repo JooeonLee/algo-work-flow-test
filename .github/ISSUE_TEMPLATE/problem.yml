@@ -13,7 +13,7 @@ body:
     id: week
     attributes:
       label: 주차
-      description: 숫자만 입력하세요. 예) 1 → week-01. 이 이슈에 등록하는 모든 문제에 공통으로 적용됩니다.
+      description: 숫자만 입력하세요. 예) 1 → week-01. 0은 온보딩/오리엔테이션 주차입니다. 이 이슈에 등록하는 모든 문제에 공통으로 적용됩니다.
       placeholder: '1'
     validations:
       required: true
