@@ -2,9 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export const SOLUTIONS_ROOT = 'solutions';
-export const CHECKLIST_MARKER = '<!-- algo-study:checklist -->';
 export const REGISTER_MARKER = '<!-- algo-study:registered -->';
 export const REVIEW_MARKER = '<!-- algo-study:submission-check -->';
+
+export function checklistMarker(dir) {
+  return `<!-- algo-study:checklist:${dir} -->`;
+}
 
 /**
  * GitHub 이슈 폼(issue form)이 만들어내는 마크다운 본문을 { 라벨: 값 } 으로 변환한다.
@@ -23,15 +26,16 @@ export function parseIssueForm(body = '') {
   return fields;
 }
 
-export function platformKey(raw = '') {
-  const v = raw.trim().toLowerCase();
-  if (v.includes('swea') || v.includes('sw expert')) return 'swea';
-  if (v.includes('프로그래머스') || v.includes('programmers')) return 'pgs';
-  return null;
-}
-
 export function platformLabel(key) {
   return key === 'swea' ? 'SWEA' : key === 'pgs' ? '프로그래머스' : key;
+}
+
+/** 문제 링크 도메인으로부터 플랫폼을 추정한다. 알 수 없는 도메인이면 null. */
+export function urlPlatformKey(url = '') {
+  const v = url.toLowerCase();
+  if (v.includes('swexpertacademy.com')) return 'swea';
+  if (v.includes('programmers.co.kr')) return 'pgs';
+  return null;
 }
 
 /** 프로그래머스 링크에서는 문제 번호를 뽑아낼 수 있다. SWEA 링크는 해시라 불가능. */
@@ -39,6 +43,17 @@ export function problemNumberFromUrl(url = '') {
   const pgs = url.match(/lessons\/(\d+)/);
   if (pgs) return pgs[1];
   return null;
+}
+
+/**
+ * "문제 목록" 필드의 한 줄을 해석한다.
+ * 형식: `링크 | 제목 | 번호(선택) | 난이도(선택) | 마감일(선택)`
+ */
+export function parseProblemLine(line) {
+  const [url = '', title = '', number = '', difficulty = '', deadline = ''] = line
+    .split('|')
+    .map((s) => s.trim());
+  return { url, title, number, difficulty, deadline };
 }
 
 export function weekDir(week) {
@@ -137,4 +152,32 @@ export function readProblemMeta(workspace, problemDirPath) {
   } catch {
     return null;
   }
+}
+
+function* iterateProblemMetas(workspace) {
+  const root = path.join(workspace, SOLUTIONS_ROOT);
+  if (!fs.existsSync(root)) return;
+  for (const weekEntry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!weekEntry.isDirectory() || !/^week-\d{2}$/.test(weekEntry.name)) continue;
+    const weekPath = path.join(root, weekEntry.name);
+    for (const problemEntry of fs.readdirSync(weekPath, { withFileTypes: true })) {
+      if (!problemEntry.isDirectory()) continue;
+      const dir = path.posix.join(SOLUTIONS_ROOT, weekEntry.name, problemEntry.name);
+      const meta = readProblemMeta(workspace, dir);
+      if (meta) yield { dir, meta };
+    }
+  }
+}
+
+/**
+ * 특정 부모(주차) 이슈가 만든 문제 폴더를 solutions/ 전체에서 찾는다.
+ * 부모 이슈 본문을 수정해 문제 목록이 바뀌면 예전 폴더가 남을 수 있어,
+ * 그 폴더를 찾아 정리하는 데 쓴다.
+ */
+export function findProblemDirsByParentIssue(workspace, parentIssueNumber) {
+  const results = [];
+  for (const { dir, meta } of iterateProblemMetas(workspace)) {
+    if (meta.parentIssue === parentIssueNumber) results.push(dir);
+  }
+  return results;
 }

@@ -1,77 +1,39 @@
 name: 📌 알고리즘 문제 등록
-description: 이번 주차에 함께 풀 문제를 등록합니다. 등록하면 풀이 폴더와 제출 체크리스트가 자동으로 생성됩니다.
+description: 이번 주차에 함께 풀 문제를 등록합니다. 여러 개를 한 번에 등록할 수 있습니다.
 title: '[문제] '
 labels: [problem]
 body:
   - type: markdown
     attributes:
       value: |
-        문제 링크만 있으면 나머지는 워크플로가 처리합니다.
+        문제 목록에 링크만 있으면 나머지는 워크플로가 처리합니다. (플랫폼은 링크로 자동 판별, 프로그래머스 번호는 링크에서 자동 추출)
         등록 후 잘못된 값이 있으면 **이슈 본문을 수정**하세요. 자동으로 다시 검사합니다.
 
   - type: input
     id: week
     attributes:
       label: 주차
-      description: 숫자만 입력하세요. 예) 1 → week-01
+      description: 숫자만 입력하세요. 예) 1 → week-01. 이 이슈에 등록하는 모든 문제에 공통으로 적용됩니다.
       placeholder: '1'
     validations:
       required: true
 
-  - type: dropdown
-    id: platform
+  - type: textarea
+    id: problems
     attributes:
-      label: 플랫폼
-      options:
-        - SWEA
-        - 프로그래머스
-    validations:
-      required: true
-
-  - type: input
-    id: url
-    attributes:
-      label: 문제 링크
-      placeholder: https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=...
-    validations:
-      required: true
-
-  - type: input
-    id: number
-    attributes:
-      label: 문제 번호
+      label: 문제 목록
       description: |
-        SWEA는 링크에 번호가 없으니 직접 입력해 주세요. (예: 1859)
-        프로그래머스는 비워 두면 링크에서 자동으로 추출합니다.
-      placeholder: '1859'
-    validations:
-      required: false
-
-  - type: input
-    id: title
-    attributes:
-      label: 문제 제목
-      placeholder: 백만 장자 프로젝트
+        한 줄에 문제 하나씩, `|`(파이프)로 구분해서 입력하세요.
+        형식: `링크 | 제목 | 번호(선택) | 난이도(선택) | 마감일(선택)`
+        - 링크: SWEA(swexpertacademy.com) 또는 프로그래머스(programmers.co.kr) 링크만 지원합니다.
+        - 제목: 필수입니다 (자동으로 채울 수 없어요).
+        - 번호: SWEA는 링크에 번호가 없어 직접 입력해야 합니다. 프로그래머스는 비워 두면 링크에서 자동 추출됩니다.
+        - 난이도 / 마감일: 문제마다 다르면 각 줄에, 비워도 됩니다.
+      placeholder: |
+        https://school.programmers.co.kr/learn/courses/30/lessons/42627 | 디스크 컨트롤러 | | Lv.3 | 2026-08-10
+        https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=... | 백만 장자 프로젝트 | 1859 | D2 |
     validations:
       required: true
-
-  - type: input
-    id: difficulty
-    attributes:
-      label: 난이도
-      description: 자유 형식. 예) D2, Lv.2
-      placeholder: D2
-    validations:
-      required: false
-
-  - type: input
-    id: deadline
-    attributes:
-      label: 마감일
-      description: YYYY-MM-DD
-      placeholder: '2026-08-10'
-    validations:
-      required: false
 
   - type: textarea
     id: notes

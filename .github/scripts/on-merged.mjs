@@ -1,8 +1,9 @@
-import { CHECKLIST_MARKER, parseSolutionPath, readProblemMeta } from './lib.mjs';
+import { checklistMarker, parseSolutionPath, readProblemMeta } from './lib.mjs';
 
 /**
- * 풀이 PR이 머지되면 해당 문제 이슈의 체크리스트에서 작성자를 체크한다.
- * 전원이 제출을 마치면 이슈를 자동으로 닫는다.
+ * 풀이 PR이 머지되면 해당 문제(자식 이슈)의 체크리스트에서 작성자를 체크한다.
+ * 전원이 제출을 마치면 그 문제 이슈를 닫고, 부모(주차) 이슈에 연결된 하위 이슈가
+ * 모두 닫혔으면 부모 이슈도 자동으로 닫는다.
  */
 export async function run({ github, context, core }) {
   const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
@@ -44,7 +45,8 @@ export async function run({ github, context, core }) {
       issue_number: meta.issue,
       per_page: 100,
     });
-    const checklist = comments.find((c) => (c.body || '').includes(CHECKLIST_MARKER));
+    const marker = checklistMarker(dir);
+    const checklist = comments.find((c) => (c.body || '').includes(marker));
     if (!checklist) {
       core.warning(`이슈 #${meta.issue}에 체크리스트 댓글이 없습니다.`);
       continue;
@@ -71,25 +73,53 @@ export async function run({ github, context, core }) {
     const boxes = [...body.matchAll(/^- \[( |x)\] @/gim)].map((m) => m[1]);
     const done = boxes.filter((b) => b === 'x').length;
     const total = boxes.length;
-    core.info(`이슈 #${meta.issue}: ${done}/${total} 제출 완료`);
+    core.info(`이슈 #${meta.issue} (${dir}): ${done}/${total} 제출 완료`);
 
-    if (total > 0 && done === total) {
-      const issue = await github.rest.issues.get({ owner, repo, issue_number: meta.issue });
-      if (issue.data.state === 'open') {
-        await github.rest.issues.createComment({
-          owner,
-          repo,
-          issue_number: meta.issue,
-          body: `🎉 전원(${total}명) 제출 완료! 이슈를 닫습니다.\n\n풀이 모아보기 → \`${dir}\``,
-        });
-        await github.rest.issues.update({
-          owner,
-          repo,
-          issue_number: meta.issue,
-          state: 'closed',
-          state_reason: 'completed',
-        });
-      }
+    if (total === 0 || done !== total) continue;
+
+    const issue = await github.rest.issues.get({ owner, repo, issue_number: meta.issue });
+    if (issue.data.state === 'open') {
+      await github.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: meta.issue,
+        body: `🎉 전원(${total}명) 제출 완료! 이 문제 이슈를 닫습니다.\n\n풀이 모아보기 → \`${dir}\``,
+      });
+      await github.rest.issues.update({
+        owner,
+        repo,
+        issue_number: meta.issue,
+        state: 'closed',
+        state_reason: 'completed',
+      });
+    }
+
+    // 부모(주차) 이슈에 연결된 하위 이슈가 전부 닫혔으면 부모도 닫는다.
+    // (GitHub이 진행률은 보여주지만 부모를 자동으로 닫아주진 않는다)
+    if (!meta.parentIssue) continue;
+
+    const { data: subIssues } = await github.request(
+      'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues',
+      { owner, repo, issue_number: meta.parentIssue },
+    );
+    const allClosed = subIssues.length > 0 && subIssues.every((s) => s.number === meta.issue || s.state === 'closed');
+    if (!allClosed) continue;
+
+    const parent = await github.rest.issues.get({ owner, repo, issue_number: meta.parentIssue });
+    if (parent.data.state === 'open') {
+      await github.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: meta.parentIssue,
+        body: `🎉 등록된 문제 ${subIssues.length}개가 모두 닫혔습니다! 이 이슈를 닫습니다.`,
+      });
+      await github.rest.issues.update({
+        owner,
+        repo,
+        issue_number: meta.parentIssue,
+        state: 'closed',
+        state_reason: 'completed',
+      });
     }
   }
 }

@@ -24,7 +24,7 @@ jobs:
     # 본문의 필드 제목으로도 판별해서 이 부트스트랩 문제를 피한다.
     if: >-
       contains(join(github.event.issue.labels.*.name, ','), 'problem')
-      || contains(github.event.issue.body, '### 플랫폼')
+      || contains(github.event.issue.body, '### 문제 목록')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
