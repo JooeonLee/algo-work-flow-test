@@ -8,6 +8,7 @@ import {
   getMembers,
   parseIssueForm,
   parseProblemLine,
+  parseProgrammersTitle,
   platformLabel,
   problemNumberFromUrl,
   problemPath,
@@ -16,6 +17,24 @@ import {
   urlPlatformKey,
   weekDir,
 } from './lib.mjs';
+
+/**
+ * 프로그래머스는 로그인 없이도 <title>에 문제 제목이 그대로 내려오길래,
+ * 제목을 안 적으면 페이지에서 긁어온다. 실패하면(느림/구조 변경/네트워크 오류) null —
+ * 호출 쪽에서 "제목을 입력해 주세요" 에러로 안전하게 떨어진다.
+ */
+async function fetchProgrammersTitle(url, fetchImpl) {
+  try {
+    const res = await fetchImpl(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; algo-study-bot)' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    return parseProgrammersTitle(await res.text());
+  } catch {
+    return null;
+  }
+}
 
 function childBody({ pKey, number, title, url, week, difficulty, deadline, parentIssueNumber }) {
   return [
@@ -38,7 +57,7 @@ function childBody({ pKey, number, title, url, week, difficulty, deadline, paren
  * 여러 번 실행되어도 결과가 같도록(idempotent) 작성했다 — 같은 줄을 다시 등록하면
  * 새 자식 이슈를 또 만들지 않고 기존 자식 이슈를 갱신한다.
  */
-export async function run({ github, context, core }) {
+export async function run({ github, context, core, fetchImpl = fetch }) {
   const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
   const parentIssue = context.payload.issue;
   const { owner, repo } = context.repo;
@@ -62,8 +81,9 @@ export async function run({ github, context, core }) {
 
   // 1) 줄마다 개별 검증
   const items = [];
-  lines.forEach((line, i) => {
-    const { url, title, number: rawNumber, difficulty, deadline } = parseProblemLine(line);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const { url, title: rawTitle, number: rawNumber, difficulty, deadline } = parseProblemLine(line);
     const lineErrors = [];
 
     if (!/^https?:\/\//.test(url)) lineErrors.push('링크가 올바른 URL이 아닙니다');
@@ -77,15 +97,30 @@ export async function run({ github, context, core }) {
       lineErrors.push('번호를 입력해 주세요 (SWEA는 필수, 프로그래머스는 링크에서 자동 추출됩니다)');
     }
 
-    if (!title) lineErrors.push('제목을 입력해 주세요');
+    let title = rawTitle;
+    if (!title && weekValid && pKey && /^[A-Za-z0-9_]+$/.test(number)) {
+      // 같은 부모 이슈가 이미 등록해 둔 문제라면, 네트워크를 또 타지 않고 기존 제목을 그대로 쓴다.
+      const existing = readProblemMeta(workspace, problemPath(week, pKey, number));
+      if (existing?.parentIssue === parentIssue.number) title = existing.title;
+    }
+    if (!title && pKey === 'pgs') {
+      title = (await fetchProgrammersTitle(url, fetchImpl)) || '';
+    }
+    if (!title) {
+      lineErrors.push(
+        pKey === 'pgs'
+          ? '제목을 자동으로 가져오지 못했습니다. 직접 입력해 주세요.'
+          : '제목을 입력해 주세요',
+      );
+    }
 
     if (lineErrors.length) {
       errors.push(`${i + 1}번째 줄 (\`${line}\`): ${lineErrors.join(' / ')}`);
-      return;
+      continue;
     }
 
     items.push({ line: i + 1, pKey, number, url, title, difficulty, deadline });
-  });
+  }
 
   // 2) 같은 이슈 안에서 문제가 중복되지 않는지 검사
   if (weekValid) {

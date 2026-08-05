@@ -96,6 +96,67 @@ test('문제 폴더 README.md의 이슈 참조는 클릭 가능한 마크다운 
   assert.match(readme, new RegExp(`\\[#${parent.number}\\]\\(https://github\\.com/${OWNER}/${REPO}/issues/${parent.number}\\)`));
 });
 
+test('프로그래머스 링크만 있고 제목이 없으면 페이지에서 제목을 가져온다 (파이프도 필요 없다)', async () => {
+  const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
+  const b = body(1, 'https://school.programmers.co.kr/learn/courses/30/lessons/12937');
+  const fetchCalls = [];
+  const fetchImpl = async (url) => {
+    fetchCalls.push(url);
+    return { ok: true, text: async () => '<title>코딩테스트 연습 - 짝수와 홀수 | 프로그래머스 스쿨</title>' };
+  };
+  const core = makeCore();
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, b), core, fetchImpl });
+
+  assert.equal(core._outputs.__failed, undefined);
+  assert.equal(fetchCalls.length, 1);
+  const meta = readMeta('solutions/week-01/pgs-12937');
+  assert.equal(meta.title, '짝수와 홀수');
+});
+
+test('프로그래머스 제목 자동 추출이 실패하면 직접 입력하라는 에러로 떨어진다', async () => {
+  const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
+  const b = body(1, 'https://school.programmers.co.kr/learn/courses/30/lessons/12937');
+  const fetchImpl = async () => ({ ok: false });
+  const core = makeCore();
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, b), core, fetchImpl });
+  assert.ok(core._outputs.__failed);
+  assert.match(core._outputs.__failed, /제목을 자동으로 가져오지 못했습니다/);
+});
+
+test('SWEA는 제목이 없으면 자동 추출을 시도하지 않고 바로 실패한다', async () => {
+  const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
+  const b = body(1, 'https://swexpertacademy.com/x?contestProbId=1 | | 1 | |');
+  let fetchCalled = false;
+  const fetchImpl = async () => {
+    fetchCalled = true;
+    return { ok: true, text: async () => '' };
+  };
+  const core = makeCore();
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, b), core, fetchImpl });
+  assert.ok(core._outputs.__failed);
+  assert.equal(fetchCalled, false);
+});
+
+test('이미 등록된 프로그래머스 문제를 제목 없이 재등록하면 네트워크 대신 기존 제목을 재사용한다', async () => {
+  const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
+  const withTitle = body(1, 'https://school.programmers.co.kr/learn/courses/30/lessons/12937 | 짝수와 홀수 | | |');
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, withTitle), core: makeCore() });
+
+  const withoutTitle = body(1, 'https://school.programmers.co.kr/learn/courses/30/lessons/12937');
+  let fetchCalled = false;
+  const fetchImpl = async () => {
+    fetchCalled = true;
+    return { ok: true, text: async () => '<title>코딩테스트 연습 - 다른제목 | 프로그래머스 스쿨</title>' };
+  };
+  const core = makeCore();
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, withoutTitle), core, fetchImpl });
+
+  assert.equal(core._outputs.__failed, undefined);
+  assert.equal(fetchCalled, false, '이미 아는 문제는 다시 네트워크를 타면 안 된다');
+  const meta = readMeta('solutions/week-01/pgs-12937');
+  assert.equal(meta.title, '짝수와 홀수');
+});
+
 test('지원하지 않는 플랫폼 링크는 등록이 실패한다', async () => {
   const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
   const bad = body(1, 'https://leetcode.com/problems/two-sum | 지원안함 | 1 | | ');

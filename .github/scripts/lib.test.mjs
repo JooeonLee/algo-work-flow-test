@@ -8,6 +8,7 @@ import {
   findProblemDirsByParentIssue,
   parseIssueForm,
   parseProblemLine,
+  parseProgrammersTitle,
   parseSolutionPath,
   problemDir,
   problemPath,
@@ -51,6 +52,16 @@ test('urlPlatformKey: 도메인으로 플랫폼을 판별한다', () => {
 test('problemNumberFromUrl: 프로그래머스 링크에서만 번호를 뽑는다', () => {
   assert.equal(problemNumberFromUrl('https://school.programmers.co.kr/learn/courses/30/lessons/12345'), '12345');
   assert.equal(problemNumberFromUrl('https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=1'), null);
+});
+
+test('parseProgrammersTitle: <title> 태그에서 문제 제목만 뽑는다', () => {
+  const html = '<html><head><title>코딩테스트 연습 - 짝수와 홀수 | 프로그래머스 스쿨</title></head></html>';
+  assert.equal(parseProgrammersTitle(html), '짝수와 홀수');
+});
+
+test('parseProgrammersTitle: 형식이 안 맞으면(사이트 개편 등) null', () => {
+  assert.equal(parseProgrammersTitle('<title>어떤 다른 페이지</title>'), null);
+  assert.equal(parseProgrammersTitle(''), null);
 });
 
 test('weekDir / problemDir / problemPath', () => {

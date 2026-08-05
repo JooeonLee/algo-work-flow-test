@@ -46,6 +46,16 @@ export function problemNumberFromUrl(url = '') {
 }
 
 /**
+ * 프로그래머스 문제 페이지의 <title>은 로그인 없이도
+ * "코딩테스트 연습 - {문제 제목} | 프로그래머스 스쿨" 형태로 내려온다.
+ * 거기서 문제 제목만 뽑아낸다. 형식이 안 맞으면(사이트 개편 등) null.
+ */
+export function parseProgrammersTitle(html = '') {
+  const m = html.match(/<title>\s*코딩테스트 연습 - (.+?)\s*\|\s*프로그래머스 스쿨\s*<\/title>/);
+  return m ? m[1].trim() : null;
+}
+
+/**
  * "문제 목록" 필드의 한 줄을 해석한다.
  * 형식: `링크 | 제목 | 번호(선택) | 난이도(선택) | 마감일(선택)`
  */
