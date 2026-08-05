@@ -11,6 +11,14 @@ const SOLUTIONS = path.join(ROOT, 'solutions');
 const README = path.join(ROOT, 'README.md');
 const START = '<!-- algo-study:board:start -->';
 const END = '<!-- algo-study:board:end -->';
+// README.md 같은 일반 파일 안의 "#123"은 GitHub이 자동으로 링크로 바꿔주지 않는다
+// (이슈/PR 댓글·본문에서만 자동 링크된다). 그래서 이슈 번호는 직접 마크다운 링크로 만든다.
+const REPO_SLUG = process.env.GITHUB_REPOSITORY || null;
+
+function issueLink(number) {
+  if (!number) return '-';
+  return REPO_SLUG ? `[#${number}](https://github.com/${REPO_SLUG}/issues/${number})` : `#${number}`;
+}
 
 function listDirs(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -85,7 +93,7 @@ const problemList = byWeek.size
           const title = p.meta
             ? `[${p.meta.platformLabel} ${p.meta.number} · ${p.meta.title}](${p.meta.url})`
             : `\`${p.problem}\``;
-          const issue = p.meta?.issue ? `#${p.meta.issue}` : '-';
+          const issue = issueLink(p.meta?.issue);
           const who = p.authors.length
             ? p.authors.map((a) => `[@${a}](https://github.com/${a})`).join(', ')
             : '-';

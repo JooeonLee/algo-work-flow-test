@@ -106,8 +106,8 @@ solutions/
 
 | 문제 | 이슈 | 제출 | 제출자 |
 | --- | --- | --- | --- |
-| [프로그래머스 12912 · 두 정수 사이의 합](https://school.programmers.co.kr/learn/courses/30/lessons/12912) | #18 | 1 | [@JooeonLee](https://github.com/JooeonLee) |
-| [프로그래머스 12937 · 짝수와 홀수](https://school.programmers.co.kr/learn/courses/30/lessons/12937) | #17 | 1 | [@JooeonLee](https://github.com/JooeonLee) |
+| [프로그래머스 12912 · 두 정수 사이의 합](https://school.programmers.co.kr/learn/courses/30/lessons/12912) | [#18](https://github.com/JooeonLee/algo-work-flow-test/issues/18) | 1 | [@JooeonLee](https://github.com/JooeonLee) |
+| [프로그래머스 12937 · 짝수와 홀수](https://school.programmers.co.kr/learn/courses/30/lessons/12937) | [#17](https://github.com/JooeonLee/algo-work-flow-test/issues/17) | 1 | [@JooeonLee](https://github.com/JooeonLee) |
 
 </details>
 

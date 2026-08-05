@@ -258,7 +258,7 @@ export async function run({ github, context, core }) {
       `- 주차: ${weekDir(week)}`,
       difficulty ? `- 난이도: ${difficulty}` : null,
       deadline ? `- 마감일: ${deadline}` : null,
-      `- 논의 이슈: #${childNumber} (상위 이슈: #${parentIssue.number})`,
+      `- 논의 이슈: [#${childNumber}](https://github.com/${owner}/${repo}/issues/${childNumber}) (상위 이슈: [#${parentIssue.number}](https://github.com/${owner}/${repo}/issues/${parentIssue.number}))`,
       '',
       '## 제출 방법',
       '',

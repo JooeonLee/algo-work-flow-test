@@ -3,7 +3,7 @@
 - 문제 링크: https://school.programmers.co.kr/learn/courses/30/lessons/12912
 - 주차: week-00
 - 난이도: Lv.1
-- 논의 이슈: #18 (상위 이슈: #16)
+- 논의 이슈: [#18](https://github.com/JooeonLee/algo-work-flow-test/issues/18) (상위 이슈: [#16](https://github.com/JooeonLee/algo-work-flow-test/issues/16))
 
 ## 제출 방법
 

@@ -85,6 +85,17 @@ test('문제 2개를 등록하면 자식 이슈 2개가 생기고 부모에 sub-
   assert.ok(parentIssue.labels.includes('problem'));
 });
 
+test('문제 폴더 README.md의 이슈 참조는 클릭 가능한 마크다운 링크여야 한다 (README 같은 일반 파일에서는 "#N"이 자동 링크되지 않는다)', async () => {
+  const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
+  const b = body(1, 'https://school.programmers.co.kr/learn/courses/30/lessons/111 | A | | |');
+  await registerRun({ github, context: issueContext(OWNER, REPO, parent.number, b), core: makeCore() });
+
+  const meta = readMeta('solutions/week-01/pgs-111');
+  const readme = fs.readFileSync(path.join(workspace, 'solutions/week-01/pgs-111', 'README.md'), 'utf8');
+  assert.match(readme, new RegExp(`\\[#${meta.issue}\\]\\(https://github\\.com/${OWNER}/${REPO}/issues/${meta.issue}\\)`));
+  assert.match(readme, new RegExp(`\\[#${parent.number}\\]\\(https://github\\.com/${OWNER}/${REPO}/issues/${parent.number}\\)`));
+});
+
 test('지원하지 않는 플랫폼 링크는 등록이 실패한다', async () => {
   const { data: parent } = await github.rest.issues.create({ title: '[문제]' });
   const bad = body(1, 'https://leetcode.com/problems/two-sum | 지원안함 | 1 | | ');
